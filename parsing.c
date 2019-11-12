@@ -8,9 +8,10 @@
 operation ** parse(char * src) {
 	int i, len;
 	int start = 0;
-	int lines = 1;
+	int lines = 0;
 	int index = 0;
 	operation ** r;
+	src = sanitize(src);
 	len = strlen(src);
 	for(i = 0; i < len; i++) {
 		if(src[i] == '\n') {
@@ -27,11 +28,12 @@ operation ** parse(char * src) {
 		}
 	}
 	r[lines] = NULL;
+	free(src);
 	return r;
 }
 
 uint8_t str_to_op(char * op_str) {
-	int opcode;
+	uint8_t opcode = 0xff;
 	if(strcmp(op_str, "A") == 0) {
 		opcode = OP_A;
 	} else if(strcmp(op_str, "AR") == 0) {
@@ -82,8 +84,12 @@ operation * parse_operation(char * src) {
 	int reg, reg2;
 	operation * r;
 	char * label = NULL;
+	char * k;
 	r = malloc(sizeof(operation));
 	len = strlen(src);
+	k = malloc(len + 1);
+	strcpy(k, src);
+	src = k;
 
 	for(i = 0; i < len; i++) {
 		if(src[i] == ' ') {
@@ -199,6 +205,7 @@ operation * parse_operation(char * src) {
 		r->op.a.value = NO_VALUE;
 		break;
 	}
+	free(k);
 	return r;
 }
 
@@ -260,7 +267,11 @@ char * sanitize(char * src) {
 		r[index++] = buf[i];
 	}
 	free(buf);
-	r[new_len] = '\n';
-	r[new_len + 1] = 0;
+	if(r[new_len - 1] != '\n') {
+		r[new_len] = '\n';
+		r[new_len + 1] = 0;
+	} else {
+		r[new_len] = 0;
+	}
 	return r;
 }

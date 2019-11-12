@@ -4,11 +4,6 @@
 
 #include "compilation.h"
 
-typedef struct {
-	char * label;
-	uint16_t address;
-} pair;
-
 uint16_t get_address(char * label, pair ** labels) {
 	int i;
 	for(i = 0; labels[i] != NULL; i++) {
@@ -88,4 +83,8 @@ void compile(machine_state * machine, operation ** ops) {
 	}
 	machine->exit_address = memory_head;
 	machine->instruction_address = machine->registers[INSTRUCTION_REG];
+	for(i = 0; labels[i] != NULL; i++) {
+		free(labels[i]);
+	}
+	free(labels);
 }

@@ -1,74 +1,50 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "parsing.h"
 #include "compilation.h"
 #include "execution.h"
+#include "utils.h"
 
-char * load_file(char * path) {
-	FILE * file;
-	int size;
-	char * src;
-	file = fopen(path, "rb");
-	fseek(file, 0, SEEK_END);
-	size = ftell(file);
-	src = malloc(size + 1);
-	rewind(file);
-	fread(src, 1, size, file);
-	src[size] = 0;
-	fclose(file);
-	return src;
-}
-
-void print_machine(machine_state machine) {
-	printf("REGISTERS: ");
-	for(int i = 0; i < 15; i++) {
-		printf("%d, ", machine.registers[i]);
-	}
-	printf("%d\n", machine.registers[15]);
-	printf("FLAGS: %d\n", machine.flags);
-	printf("INSTRUCTION ADDRESS: %d\n", machine.instruction_address);
-	printf("EXIT ADDRESS: %d\n", machine.exit_address);
-	uint8_t * memory = (uint8_t*)machine.memory;
-	for(int i = 0; i < 16; i++) {
-		for(int j = 0; j < 8; j++) {
-			printf("%02x ", memory[i * 8 + j]);
-		}
-		printf("\n");
-	}
-}
 
 int main(int argc, char **  argv) {
-	char * src;
+	machine_state machine;
+	int labels, addresses, d;
 
-	if(argc > 1) {
-		src = load_file(argv[1]);
-	} else {
-		src = load_file("ex/src");
+	if(argc <= 1) {
+		execute_file("ex/fib");
+		return 0;
+	}
+	
+	if(argc == 2) {
+		execute_file(argv[1]);
+		return 0;
 	}
 
-	operation ** ops = parse(sanitize(src));
-	machine_state machine;
-	machine.memory_size = 1024 * 1024;
-	machine.memory = malloc(machine.memory_size);
-
-	compile(&machine, ops);
-
-	do { 
-		void * address = (void*)(machine.memory + machine.instruction_address);
-		uint8_t opcode = *(uint8_t*)address;
-		printf("%02x ", opcode);
-		if(opcode % 4 == 1) {
-			printf("%02x\n", *(uint8_t*)(address + 1));
-		} else {
-			printf("%02x ", *(uint8_t*)(address + 1));
-			printf("%04x\n", *(uint16_t*)(address + 2));
+	if(strcmp(argv[1], "compile") == 0) {
+		if(argc > 3) {
+			machine = compile_from_src(argv[2]);
+			save_to_file(machine, argv[3]);
 		}
-		print_machine(machine);
-		//scanf("%s", src);
-	} while(execute_step(&machine) == 1);
-
-	print_machine(machine);
+		return 0;
+	} else if(strcmp(argv[1], "disassemble") == 0) {
+		if(argc > 4) {
+			sscanf(argv[3], "%d", &labels);
+			sscanf(argv[4], "%d", &addresses);
+			
+		} else {
+			labels = 1;
+			addresses = 0;
+		}
+		machine = read_from_file(argv[2]);
+		printf(disassemble(machine, labels, addresses));
+		return 0;
+	} else if(strcmp(argv[1], "execute") == 0) {
+		machine = read_from_file(argv[2]);
+		execute_verbose(&machine);
+		return 0;
+	}
 
 	return 0;
 }

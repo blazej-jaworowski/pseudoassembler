@@ -66,6 +66,9 @@ void execute_2B(uint32_t instruction_addr, machine_state * machine) {
 		set_flags = 0;
 		machine->registers[reg1] = machine->registers[reg2];
 		break;
+	default:
+		machine->flags = 3;
+		return;
 	}
 
 	if(!set_flags) {
@@ -157,6 +160,9 @@ void execute_4B(uint32_t instruction_addr, machine_state * machine) {
 		set_flags = 0;
 		*addr_pointer = machine->registers[reg];
 		break;
+	default:
+		machine->flags = 3;
+		return;
 	}
 
 	if(!set_flags) {

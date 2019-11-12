@@ -6,6 +6,11 @@
 #include "parsing.h"
 
 typedef struct {
+	char * label;
+	uint16_t address;
+} pair;
+
+typedef struct {
 	uint32_t registers[REGISTERS];
 	uint32_t instruction_address;
 	uint8_t flags;
